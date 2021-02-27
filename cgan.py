@@ -19,21 +19,16 @@ import matplotlib.animation as animation
 # from IPython.display import HTML
 # from inspect import currentframe, getframeinfo
 
-mypath = './torchtest.pth'
-
-# plt.figure(figsize = (8,8))
-# plt.imshow(train[0])
-# plt.show()
-
+training = False
 device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 
 batch_size = 50
 image_size = 28
 nc = 1 #number of channels, these are single channel images
 nz = 100 #size of latent z vector
-ngf = 64 #size of feature maps in the generator, assuming must be same as image size (edit: this was wrong)
-ndf = 64 #same but discrim #change back to 28 if using first versin of discrim
-num_epochs = 25
+ngf = 16 #size of feature maps in the generator, assuming must be same as image size (edit: this was wrong)
+ndf = 16 #same but discrim #change back to 28 if using first versin of discrim
+num_epochs = 20
 lr = 0.0002 #learnig rate
 lrg = 0.001
 d_iters = 5
@@ -267,7 +262,7 @@ def train():
 				x = netG(torch.randn(1, nz, 1, 1).to(device), torch.randint(9, (1,)).to(device))
 				plt.figure()
 				plt.imshow(x.detach().cpu().numpy().squeeze(0).squeeze(0))
-				plt.savefig('epochNumber{}'.format(epoch + 1))
+				plt.savefig("outputs/epochNumber{}".format(epoch + 1))
 				plt.close()
 			G_losses.append(errG.item())
 			D_losses.append(errD.item())
@@ -277,19 +272,29 @@ def train():
 			#check how the gen is doing by saving outputs on fixed_noise
 
 			#skipped this part
-	# torch.save(netD.state_dict(), mypath)
-	# torch.save(netG.state_dict(), mypath)
+	torch.save(netD.state_dict(), "outputs/netD.pth")
+	torch.save(netG.state_dict(), "outputs/netG.pth")
 
 
 
-train()
+if training:
+	train()
+else:
+	mynet = Generator(ngpu).to(device)
+	mynet.load_state_dict(torch.load("outputs/netG.pth"))
+	#print(torch.randint(9,(1,)))
+	imageList = []
+	for i in range(10):
+		noise = torch.randn(1, nz, 1, 1)
+		noise = noise.repeat(10,1,1,1)
+		label_batch = torch.arange(10)
+		imageList.append(mynet(noise, label_batch).squeeze(1).detach())
 
-# mynet = Generator(ngpu).to(device)
-# mynet.load_state_dict(torch.load(mypath))
-# print(torch.randint(9,(1,)))
-# x = mynet(torch.randn(1, nz, 1, 1),torch.randint(9,(1,)))
-
-# plt.imshow(x.detach().numpy().squeeze(0).squeeze(0))
-# plt.show()
+	fig, axs = plt.subplots(10, 10)
+	for index, image in enumerate(imageList):
+		for label in range(10):
+			axs[index, label].imshow(image[label])
+	plt.savefig("outputs/test.png")
+	plt.show()
 
 
