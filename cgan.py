@@ -264,7 +264,7 @@ def train():
 				x = netG(torch.randn(1, nz, 1, 1),torch.randint(9,(1,)))
 				plt.figure()
 				plt.imshow(x.detach().numpy().squeeze(0).squeeze(0))
-				plt.savefig('epochNumber{}'.format(epoch + 1))
+				plt.savefig("outputs\\" + 'epochNumber{}'.format(epoch + 1))
 				plt.close()
 			G_losses.append(errG.item())
 			D_losses.append(errD.item())
